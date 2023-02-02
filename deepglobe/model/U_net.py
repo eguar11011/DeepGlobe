@@ -2,27 +2,37 @@ import os
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+import torchvision
 from torchvision import datasets, transforms
+import torch.nn.functional as F
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
 
 
+""""
+Revisar sobre la inforación perdida.
+"""
+
 class Block(nn.Module):
     def __init__(self, in_ch, out_ch):
+        """
+        conv3x3->ReLU->conv3x3->ReLU 
+        """
         super().__init__()
-        self.conv1 = nn.Conv2d(in_ch, out_ch, 3)
+        self.conv1 = nn.Conv2d(in_ch, out_ch, 3) # padding
         self.relu  = nn.ReLU()
         self.conv2 = nn.Conv2d(out_ch, out_ch, 3)
     
     def forward(self, x):
-        return self.relu(self.conv2(self.relu(self.conv1(x))))
+        return self.relu(self.conv2(self.relu(self.conv1(x)))) # Esta es la secuencia
 
 class Encoder(nn.Module):
-    def __init__(self, chs = (3,64,128, 256, 512, 1024)):
+    def __init__(self, chs = (3,64,128, 256, 512, 1024)): # Aumento de los canales
         super().__init__()
-        self.enc_blocks = nn.ModuleList([Block(chs[i], chs[i+1])for i in range(len(chs)-1)])
+        self.enc_blocks = nn.ModuleList([Block(chs[i], chs[i+1])for i in range(len(chs)-1)]) # parece la lista generada del modelo
         self.pool = nn.MaxPool2d(2)
+
     def forward(self, x):
         ftrs = []
         for block in self.enc_blocks:
@@ -31,16 +41,67 @@ class Encoder(nn.Module):
             x = self.pool(x)
         return ftrs
 
-encoder = Encoder()
-#input image
+class Decoder(nn.Module):
+    def __init__(self, chs=(1024, 512, 256, 128, 64)):
+        super().__init__()
+        self.chs         = chs
+        self.upconvs    = nn.ModuleList([nn.ConvTranspose2d(chs[i], chs[i+1], 2, 2) for i in range(len(chs)-1)])
+        self.dec_blocks = nn.ModuleList([Block(chs[i], chs[i+1]) for i in range(len(chs)-1)]) 
+        
+    def forward(self, x, encoder_features):
+        for i in range(len(self.chs)-1):
+            x        = self.upconvs[i](x)
+            enc_ftrs = self.crop(encoder_features[i], x)
+            x        = torch.cat([x, enc_ftrs], dim=1)
+            x        = self.dec_blocks[i](x)
+        return x
+    
+    def crop(self, enc_ftrs, x):
+        _, _, H, W = x.shape
+        enc_ftrs   = torchvision.transforms.CenterCrop([H, W])(enc_ftrs)
+        return enc_ftrs
 
-x = torch.randn(1,3,572,572)
-ftrs = encoder(x)
+class UNet(nn.Module):
+    def __init__(self, enc_chs=(3,64,128,256,512,1024), dec_chs=(1024, 512, 256, 128, 64), num_class=1, retain_dim=False, out_sz=(572,572)):
+        super().__init__()
+        self.encoder     = Encoder(enc_chs)
+        self.decoder     = Decoder(dec_chs)
+        self.head        = nn.Conv2d(dec_chs[-1], num_class, 1)
+        self.retain_dim  = retain_dim
+    def forward(self, x):
+        enc_ftrs = self.encoder(x)
+        out      = self.decoder(enc_ftrs[::-1][0], enc_ftrs[::-1][1:])
+        out      = self.head(out)
+        if self.retain_dim:
+            out = F.interpolate(out, out_sz)
+        return out
 
-for ftr in ftrs: print(ftr.shape)
 
+f, v = False, True
 
+test1= f
+test2= f
+test3= f # necesita del test2
+test4= f
 
-"""enc_block = Block(1,64)
-x = torch.randn(1,1,572,572)
-print(enc_block(x).shape)"""
+if test1:
+    enc_block = Block(1,64)
+    x = torch.randn(1,1,572,572)
+    print(enc_block(x).shape)
+
+if test2:
+    encoder = Encoder()
+    #input image
+    x = torch.randn(1,3,572,572)
+    ftrs = encoder(x)
+    for ftr in ftrs: print(ftr.shape)
+
+if test3:
+    decoder = Decoder()
+    x = torch.randn(1, 1024, 28, 28)
+    print(decoder(x, ftrs[::-1][1:]).shape)
+
+if test4:
+    unet = UNet()
+    x    = torch.randn(1, 3, 572, 572)
+    print(unet(x).shape)
