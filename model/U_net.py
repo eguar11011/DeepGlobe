@@ -6,8 +6,8 @@ import torchvision
 from torchvision import datasets, transforms
 import torch.nn.functional as F
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using {device} device")
+#from dataloading import MyDataset
+
 
 
 """"
@@ -61,7 +61,7 @@ class Decoder(nn.Module):
         enc_ftrs   = torchvision.transforms.CenterCrop([H, W])(enc_ftrs)
         return enc_ftrs
 
-class UNet(nn.Module):
+class Unet(nn.Module):
     def __init__(self, enc_chs=(3,64,128,256,512,1024), dec_chs=(1024, 512, 256, 128, 64), num_class=1, retain_dim=False, out_sz=(572,572)):
         super().__init__()
         self.encoder     = Encoder(enc_chs)
@@ -77,31 +77,36 @@ class UNet(nn.Module):
         return out
 
 
-f, v = False, True
+if __name__ == "__main__":
+    f, v = False, True
 
-test1= f
-test2= f
-test3= f # necesita del test2
-test4= f
+    test1= v
+    test2= f
+    test3= f # necesita del test2
+    test4= f
 
-if test1:
-    enc_block = Block(1,64)
-    x = torch.randn(1,1,572,572)
-    print(enc_block(x).shape)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using {device} device")
 
-if test2:
-    encoder = Encoder()
-    #input image
-    x = torch.randn(1,3,572,572)
-    ftrs = encoder(x)
-    for ftr in ftrs: print(ftr.shape)
 
-if test3:
-    decoder = Decoder()
-    x = torch.randn(1, 1024, 28, 28)
-    print(decoder(x, ftrs[::-1][1:]).shape)
+    if test1:
+        enc_block = Block(1,64)
+        x = torch.randn(1,572,572)
+        print(enc_block(x).shape)
 
-if test4:
-    unet = UNet()
-    x    = torch.randn(1, 3, 572, 572)
-    print(unet(x).shape)
+    if test2:
+        encoder = Encoder()
+        #input image
+        x = torch.randn(1,3,572,572)
+        ftrs = encoder(x)
+        for ftr in ftrs: print(ftr.shape)
+
+    if test3:
+        decoder = Decoder()
+        x = torch.randn(1, 1024, 28, 28)
+        print(decoder(x, ftrs[::-1][1:]).shape)
+
+    if test4:
+        unet = Unet()
+        x    = torch.randn(1, 3, 572, 572)
+        print(unet(x).shape)

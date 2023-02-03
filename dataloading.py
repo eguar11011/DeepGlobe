@@ -46,14 +46,17 @@ class MyDataset(Dataset):
         img:np.ndarray = plt.imread(img_path)
         mask_path = os.path.join(train_dir, f"{ID}_mask.png")
         mask: np.ndarray = plt.imread(mask_path)
-        print(img.shape)
+
 
         return img, mask
+
+
+if __name__ == "__main__":
         
-myset = MyDataset(train_df, img_ids)
+    myset = MyDataset(train_df, img_ids)
 
-img_mask = DataLoader(myset, batch_size=5, shuffle=False)
-img, img_mask = next(iter(img_mask))
+    img_mask = DataLoader(myset, batch_size=5, shuffle=False)
+    img, img_mask = next(iter(img_mask))
 
 
-print(img_mask[0])
+    print(img_mask[1].shape)
