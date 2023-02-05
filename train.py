@@ -53,28 +53,29 @@ def train_loop(dataloader, model, loss_fn, optimizer):
             
 # datos
 
+if __name__ == "__main__":
 
-myset = MyDataset(train_df, img_ids)
-model = Unet()
-img_mask = DataLoader(myset, batch_size=1, shuffle=False)
-# img, img_mask = next(iter(img_mask))
+    myset = MyDataset(train_df, img_ids)
+    model = Unet()
+    img_mask = DataLoader(myset, batch_size=1, shuffle=False)
+    # img, img_mask = next(iter(img_mask))
 
-# parametros
+    # parametros
 
-learning_rate = 1e-3
-batch_size = 64
-epochs = 1
+    learning_rate = 1e-3
+    batch_size = 64
+    epochs = 1
 
-loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(),
-                            lr = learning_rate)
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(),
+                                lr = learning_rate)
 
 
-# Bucle de entrenamiento 
+    # Bucle de entrenamiento 
 
-for t in range(epochs):
-    print(f"Epoch {t+1}\n------------------------ ")
-    train_loop(img_mask, model, loss_fn, optimizer)
+    for t in range(epochs):
+        print(f"Epoch {t+1}\n------------------------ ")
+        train_loop(img_mask, model, loss_fn, optimizer)
 
-    
-print("Done!")
+        
+    print("Done!")

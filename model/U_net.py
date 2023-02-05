@@ -1,3 +1,7 @@
+import numpy as np
+import pandas as pd 
+import matplotlib.pyplot as plt
+
 import os
 import torch
 from torch import nn
@@ -6,13 +10,30 @@ import torchvision
 from torchvision import datasets, transforms
 import torch.nn.functional as F
 
+import sys 
+print(sys.path.append('../'))
 #from dataloading import MyDataset
-
+from dataloading import MyDataset
 
 
 """"
 Revisar sobre la inforación perdida.
 """
+
+# routes
+base_dir:str = os.path.abspath("data")
+train_dir:str = os.path.join(base_dir, "train")
+test_dir:str = os.path.join(base_dir, "test")
+valid_dir:str = os.path.join(base_dir, "valid")
+
+# dataframes
+filenames_df = pd.read_csv(os.path.join(base_dir, "metadata.csv"))
+train_df = filenames_df[filenames_df['split']=='train']
+class_dict_df = pd.read_csv(os.path.join(base_dir ,"class_dict.csv"))
+# np.ndarray
+img_ids: np.ndarray = filenames_df[filenames_df["split"] == "train"]["image_id"].values 
+
+
 
 class Block(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -77,7 +98,16 @@ class Unet(nn.Module):
         return out
 
 
+"""
+Log del programa
+
+"""
+
 if __name__ == "__main__":
+
+    myset = MyDataset(train_df, img_ids)
+    model = Unet()
+    img_mask = DataLoader(myset, batch_size=1, shuffle=False)
     f, v = False, True
 
     test1= v
