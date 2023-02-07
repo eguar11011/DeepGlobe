@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
+from torchvision.io import read_image
 
 import os
 import warnings
@@ -44,13 +45,14 @@ class MyDataset(Dataset):
         ID:int = self.img_ids[idx]
 
         img_path = os.path.join(train_dir, f"{ID}_sat.jpg")
-        img:np.ndarray = plt.imread(img_path)
+        img:torch.tensor = read_image(img_path)
         mask_path = os.path.join(train_dir, f"{ID}_mask.png")
-        mask: np.ndarray = plt.imread(mask_path)
+        mask:torch.tensor = read_image(mask_path)
 
 
-        return img, mask
+        return img.float(), mask
 
+# Buscar lo de normalizar los valores de la imagen???
 
 if __name__ == "__main__":
         
@@ -60,4 +62,4 @@ if __name__ == "__main__":
     img, img_mask = next(iter(img_mask))
 
 
-    print(img_mask[1].shape)
+    print(img_mask[1].shape, img.dtype )

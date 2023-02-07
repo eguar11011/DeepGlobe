@@ -10,9 +10,10 @@ import torchvision
 from torchvision import datasets, transforms
 import torch.nn.functional as F
 
-import sys 
+"""import sys 
 print(sys.path.append('../'))
-#from dataloading import MyDataset
+#from dataloading import MyDataset"""
+
 from dataloading import MyDataset
 
 
@@ -100,7 +101,6 @@ class Unet(nn.Module):
 
 """
 Log del programa
-
 """
 
 if __name__ == "__main__":

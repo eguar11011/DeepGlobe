@@ -12,7 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from dataloading import MyDataset
-from model.U_net import Unet, Decoder, Encoder, Block
+from U_net import Unet, Decoder, Encoder, Block
 
 # routes
 base_dir:str = os.path.abspath("data")
