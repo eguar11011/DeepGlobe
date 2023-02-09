@@ -8,12 +8,20 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
 from torchvision.io import read_image
+import torch.nn.functional as F
+
 
 import os
 import warnings
 warnings.filterwarnings("ignore")
 
+"""
+To do list
 
+- Revisar el tipado de torch
+- Normalización de imagenes
+- Buscar lo del tipo de dato float
+"""
 
 #routes
 base_dir:str = os.path.abspath("data")
@@ -27,8 +35,7 @@ train_df = filenames_df[filenames_df['split']=='train']
 class_dict_df = pd.read_csv(os.path.join(base_dir ,"class_dict.csv"))
 # np.ndarray
 img_ids: np.ndarray = filenames_df[filenames_df["split"] == "train"]["image_id"].values 
-
-
+    
 
 
 class MyDataset(Dataset):
@@ -45,21 +52,25 @@ class MyDataset(Dataset):
         ID:int = self.img_ids[idx]
 
         img_path = os.path.join(train_dir, f"{ID}_sat.jpg")
-        img:torch.tensor = read_image(img_path)
+        img:torch.tensor = read_image(img_path).float()
         mask_path = os.path.join(train_dir, f"{ID}_mask.png")
         mask:torch.tensor = read_image(mask_path)
+        
+        img, mask = img.view(1, 3, 2448, 2448),img.view(1, 3, 2448, 2448)
+        rescaled_img = F.interpolate(img, size= (256,256), mode = 'bilinear', align_corners= False)    
+        rescaled_mask = F.interpolate(mask, size= (256,256), mode = 'bilinear', align_corners= False)
 
+        return rescaled_img.squeeze(), rescaled_mask.squeeze()
 
-        return img.float(), mask
-
-# Buscar lo de normalizar los valores de la imagen???
 
 if __name__ == "__main__":
-        
+   
+
     myset = MyDataset(train_df, img_ids)
 
     img_mask = DataLoader(myset, batch_size=5, shuffle=False)
     img, img_mask = next(iter(img_mask))
 
 
-    print(img_mask[1].shape, img.dtype )
+    print(img[1].shape, img.dtype , img_mask[1].shape)
+

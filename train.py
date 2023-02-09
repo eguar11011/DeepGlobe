@@ -38,9 +38,10 @@ Rutina de entrenamiento
 def train_loop(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     for batch, (X,y) in enumerate(dataloader):
+        X, y = X.squeeze(0), y.squeeze()
         # compute Prediction and loss
-        pred = model(X)
-        loss = loss_fn(pred, y)
+        pred = model(X)  #??? porque 
+        loss = loss_fn(pred, y[batch]) # aqui esta el error por las dimensiones y:[3,3,256,256], pred:[3,3,256,256]
         
         # Backpropagation
         optimizer.zero_grad()
@@ -57,8 +58,8 @@ if __name__ == "__main__":
 
     myset = MyDataset(train_df, img_ids)
     model = Unet()
-    img_mask = DataLoader(myset, batch_size=1, shuffle=False)
-    # img, img_mask = next(iter(img_mask))
+    img_mask = DataLoader(myset, batch_size=3, shuffle=False)
+    #img, img_mask = next(iter(img_mask))
 
     # parametros
 

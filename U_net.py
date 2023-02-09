@@ -33,7 +33,7 @@ train_df = filenames_df[filenames_df['split']=='train']
 class_dict_df = pd.read_csv(os.path.join(base_dir ,"class_dict.csv"))
 # np.ndarray
 img_ids: np.ndarray = filenames_df[filenames_df["split"] == "train"]["image_id"].values 
-
+out_sz=(256,256)
 
 
 class Block(nn.Module):
@@ -84,7 +84,7 @@ class Decoder(nn.Module):
         return enc_ftrs
 
 class Unet(nn.Module):
-    def __init__(self, enc_chs=(3,64,128,256,512,1024), dec_chs=(1024, 512, 256, 128, 64), num_class=1, retain_dim=False, out_sz=(572,572)):
+    def __init__(self, enc_chs=(3,64,128,256,512,1024), dec_chs=(1024, 512, 256, 128, 64), num_class=3, retain_dim=True, out_sz=(256,256)):
         super().__init__()
         self.encoder     = Encoder(enc_chs)
         self.decoder     = Decoder(dec_chs)
@@ -95,8 +95,8 @@ class Unet(nn.Module):
         out      = self.decoder(enc_ftrs[::-1][0], enc_ftrs[::-1][1:])
         out      = self.head(out)
         if self.retain_dim:
-            out = F.interpolate(out, out_sz)
-        return out
+            out = F.interpolate(out, out_sz, mode = 'bilinear', align_corners= False) 
+        return out.squeeze()
 
 
 """
@@ -104,6 +104,22 @@ Log del programa
 """
 
 if __name__ == "__main__":
+
+
+    # routes
+    base_dir:str = os.path.abspath("data")
+    train_dir:str = os.path.join(base_dir, "train")
+    test_dir:str = os.path.join(base_dir, "test")
+    valid_dir:str = os.path.join(base_dir, "valid")
+
+    # dataframes
+    filenames_df = pd.read_csv(os.path.join(base_dir, "metadata.csv"))
+    train_df = filenames_df[filenames_df['split']=='train']
+    class_dict_df = pd.read_csv(os.path.join(base_dir ,"class_dict.csv"))
+    # np.ndarray
+    img_ids: np.ndarray = filenames_df[filenames_df["split"] == "train"]["image_id"].values 
+
+
 
     myset = MyDataset(train_df, img_ids)
     model = Unet()
