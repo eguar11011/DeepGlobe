@@ -19,6 +19,7 @@ base_dir:str = os.path.abspath("data")
 train_dir:str = os.path.join(base_dir, "train")
 test_dir:str = os.path.join(base_dir, "test")
 valid_dir:str = os.path.join(base_dir, "valid")
+train_mask_dir: str = os.path.join(base_dir, "train_masks")
 
 # dataframes
 filenames_df = pd.read_csv(os.path.join(base_dir, "metadata.csv"))
@@ -38,10 +39,12 @@ Rutina de entrenamiento
 def train_loop(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
     for batch, (X,y) in enumerate(dataloader):
+        #print(X.shape, y.shape)
         X, y = X.squeeze(0), y.squeeze()
         # compute Prediction and loss
-        pred = model(X)  #??? porque 
-        loss = loss_fn(pred, y[batch]) # aqui esta el error por las dimensiones y:[3,3,256,256], pred:[3,3,256,256]
+        pred = model(X)  
+        #print(X.shape, y.shape)
+        loss = loss_fn(pred, y) 
         
         # Backpropagation
         optimizer.zero_grad()
@@ -56,7 +59,7 @@ def train_loop(dataloader, model, loss_fn, optimizer):
 
 if __name__ == "__main__":
 
-    myset = MyDataset(train_df, img_ids)
+    myset = MyDataset(train_dir, train_mask_dir, img_ids)
     model = Unet()
     img_mask = DataLoader(myset, batch_size=3, shuffle=False)
     #img, img_mask = next(iter(img_mask))

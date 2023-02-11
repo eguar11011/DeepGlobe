@@ -84,7 +84,7 @@ class Decoder(nn.Module):
         return enc_ftrs
 
 class Unet(nn.Module):
-    def __init__(self, enc_chs=(3,64,128,256,512,1024), dec_chs=(1024, 512, 256, 128, 64), num_class=3, retain_dim=True, out_sz=(256,256)):
+    def __init__(self, enc_chs=(3,64,128,256,512,1024), dec_chs=(1024, 512, 256, 128, 64), num_class=7, retain_dim=True, out_sz=(256,256)):
         super().__init__()
         self.encoder     = Encoder(enc_chs)
         self.decoder     = Decoder(dec_chs)
