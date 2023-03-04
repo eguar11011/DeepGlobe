@@ -58,8 +58,11 @@ class MyDataset(Dataset):
         img:torch.tensor = read_image(img_path).float()
         mask_path = os.path.join(self.mask_dir, f"{ID}_mask.png")
         mask:torch.tensor = read_image(mask_path)
-        
-        img, mask = img.view(1, 3, 2448, 2448), mask.view(1,1,2448, 2448).float()
+        mask = mask.to(torch.int64)
+        mask = torch.nn.functional.one_hot(mask, num_classes=7) #one hot
+
+
+        img, mask = img.view(1, 3, 2448, 2448), mask.view(1,7,2448, 2448).float()
         rescaled_img = F.interpolate(img, size= (256,256), mode = 'bilinear', align_corners= False)
         
         rescaled_mask = F.interpolate(mask, size= (256,256), mode = 'bilinear', align_corners= False)

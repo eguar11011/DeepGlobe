@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import ToTensor
-
+import torch.nn.functional as F
 import os
 
 import numpy as np
@@ -28,6 +28,20 @@ class_dict_df = pd.read_csv(os.path.join(base_dir ,"class_dict.csv"))
 # np.ndarray
 img_ids: np.ndarray = filenames_df[filenames_df["split"] == "train"]["image_id"].values 
 
+def soft_dice_loss(y_true, y_pred, epsilon=1e-6): 
+        #comment out if your model contains a sigmoid or equivalent activation layer
+        y_pred = F.sigmoid(y_pred)       
+        
+        # skip the batch and class axis for calculating Dice score
+        """axes = tuple(range(1, len(y_pred.shape)-1)) 
+        numerator = 2. * np.sum(y_pred * y_true, axes)
+        denominator = np.sum(np.square(y_pred) + np.square(y_true), axes)"""
+        class_preds += torch.stack(
+    [
+        (y_pred & y_true[:, c].unsqueeze(1)).sum(dim=[0, 2, 3])
+        for c in range(7)
+    ]).to("cpu")
+
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device} device")
@@ -42,13 +56,14 @@ def train_loop(dataloader, model, loss_fn, optimizer):
         #print(X.shape, y.shape)
         X, y = X.squeeze(0), y.squeeze()
         # compute Prediction and loss
-        pred = model(X)  
+        pred = model(X)  # distribution per pixiel?
         #print(X.shape, y.shape)
-        loss = loss_fn(pred, y) 
+        #loss = loss_fn(pred, y)
+        loss = soft_dice_loss(y, pred) 
         
         # Backpropagation
         optimizer.zero_grad()
-        loss.backward()
+        loss.backward() 
         optimizer.step()
         
         if batch % 100 == 0:
@@ -83,3 +98,5 @@ if __name__ == "__main__":
 
         
     print("Done!")
+
+
